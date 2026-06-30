@@ -7,34 +7,54 @@ import {
   Button,
   Typography,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import authService from "../../services/authService";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     if (!username || !password) {
       setError("نام کاربری و رمز عبور الزامی است");
+      setLoading(false);
       return;
     }
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.post('/api/auth/login', { username, password })
-      // localStorage.setItem('authToken', response.data.token)
-
-      // Temporary mock
-      localStorage.setItem("authToken", "mock-token");
-      navigate("/dashboard");
+      // برای development: اگر از credentials صحیح استفاده کنند
+      // یا اگر تنها می‌خواهند test کنند می‌توانند هر چیزی وارد کنند
+      if (username && password) {
+        // سعی کن واقعی login کنی
+        try {
+          await authService.login(username, password);
+          navigate("/dashboard");
+        } catch (apiErr) {
+          // اگر API کار نکرد، برای development موارد mock کن
+          if (process.env.NODE_ENV === "development") {
+            localStorage.setItem("user", JSON.stringify(username));
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("authToken", "mock-dev-token");
+            navigate("/dashboard");
+          } else {
+            throw apiErr;
+          }
+        }
+      }
     } catch (err) {
+      console.error(err);
       setError("نام کاربری یا رمز عبور اشتباه است");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,6 +89,7 @@ const Login = () => {
               label="نام کاربری"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
               sx={{ mb: 2 }}
             />
             <TextField
@@ -77,10 +98,18 @@ const Login = () => {
               label="رمز عبور"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
               sx={{ mb: 3 }}
             />
-            <Button fullWidth type="submit" variant="contained" size="large">
-              ورود
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              startIcon={loading && <CircularProgress size={20} />}
+            >
+              {loading ? "در حال ورود..." : "ورود"}
             </Button>
           </Box>
         </CardContent>

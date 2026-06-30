@@ -75,18 +75,23 @@ const Sidebar = () => {
           textAlign: "center",
         }}
       >
-        <AdminPanelSettings
+        {/* تصویر هوبر */}
+        <Box
+          component="img"
+          src="/images/hoober.png"
+          alt="هوبر"
           sx={{
-            fontSize: 55,
-            color: "primary.main",
-            mb: 1,
+            width: 140,
+            mb: 2,
+            display: "block",
+            mx: "auto",
           }}
         />
 
-        <Typography fontWeight={700}>پنل مدیریت</Typography>
+        <Typography fontWeight={700}>پنل نمایندگان هوبر</Typography>
 
         <Typography variant="body2" color="text.secondary">
-          توزیع دستگاه POS
+          توزیع و تخصیص دستگاه
         </Typography>
       </Box>
 

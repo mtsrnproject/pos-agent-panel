@@ -14,7 +14,7 @@ import {
 
 export default function AssignDeviceModal({
   open,
-  serial,
+  device,
   onClose,
   onSubmit,
   loading,
@@ -22,6 +22,8 @@ export default function AssignDeviceModal({
   const [formData, setFormData] = useState({
     nationalId: "",
     mobile: "",
+    firstName: "",
+    lastName: "",
   });
 
   const handleChange = (e) => {
@@ -30,13 +32,18 @@ export default function AssignDeviceModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(serial, formData);
+    if (device?.name) {
+      onSubmit(device.name, formData);
+      setFormData({ nationalId: "", mobile: "", firstName: "", lastName: "" });
+    }
   };
 
   const handleClose = () => {
-    setFormData({ nationalId: "", mobile: "" });
+    setFormData({ nationalId: "", mobile: "", firstName: "", lastName: "" });
     onClose();
   };
+
+  if (!device) return null;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -48,9 +55,29 @@ export default function AssignDeviceModal({
               سریال انتخابی:
             </Typography>
             <Typography variant="h6" fontFamily="monospace" fontWeight="bold">
-              {serial}
+              {device.serial_number}
             </Typography>
           </Box>
+
+          <TextField
+            fullWidth
+            label="نام"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            margin="normal"
+            disabled={loading}
+          />
+
+          <TextField
+            fullWidth
+            label="نام خانوادگی"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            margin="normal"
+            disabled={loading}
+          />
 
           <TextField
             fullWidth

@@ -1,5 +1,5 @@
 // src/components/invoices/InvoiceList.jsx
-import { Box, Typography, Stack, CircularProgress, Alert } from "@mui/material";
+import { Box, Typography, Stack, CircularProgress } from "@mui/material";
 import InvoiceCard from "./InvoiceCard";
 
 export default function InvoiceList({
@@ -7,38 +7,22 @@ export default function InvoiceList({
   selectedId,
   onSelect,
   loading,
-  error,
 }) {
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error">خطا در دریافت فاکتورها: {error.message}</Alert>
-    );
-  }
-
-  if (!invoices || invoices.length === 0) {
-    return <Alert severity="info">فاکتوری یافت نشد</Alert>;
-  }
+  if (loading) return <CircularProgress />;
 
   return (
     <Box>
-      <Typography variant="h6" mb={2} fontWeight="bold">
-        فاکتورهای اخیر
+      <Typography variant="h6" mb={2}>
+        فاکتورها
       </Typography>
+
       <Stack spacing={2}>
-        {invoices.map((invoice) => (
+        {invoices.map((inv) => (
           <InvoiceCard
-            key={invoice.id}
-            invoice={invoice}
-            isSelected={invoice.id === selectedId}
-            onClick={() => onSelect(invoice.id)}
+            key={inv.name}
+            invoice={inv}
+            isSelected={inv.name === selectedId}
+            onClick={() => onSelect(inv.name)}
           />
         ))}
       </Stack>

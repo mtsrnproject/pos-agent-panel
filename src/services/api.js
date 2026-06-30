@@ -1,33 +1,25 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
-  timeout: 10000,
+  baseURL: "https://plus.hamtabank.com",
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
+    Authorization: "token db5ceba5939cfec:ac699dba08a7a7a",
   },
 });
 
-// Request interceptor برای اضافه کردن token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-// Response interceptor برای هندل کردن خطاها
 api.interceptors.response.use(
   (response) => response.data,
+
   (error) => {
+    console.error("API ERROR:", error.response?.status, error.response?.data);
+
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
       window.location.href = "/login";
     }
+
     return Promise.reject(error);
   },
 );

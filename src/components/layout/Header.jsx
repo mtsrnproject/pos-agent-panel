@@ -9,13 +9,23 @@ import {
 } from "@mui/material";
 import { Menu, AccountCircle, Logout } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import authService from "../../services/authService";
 
 const Header = () => {
   const navigate = useNavigate();
+  const user = authService.getStoredUser();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      // Even if logout API fails, clear local data
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("user");
+      navigate("/login");
+    }
   };
 
   return (
@@ -28,6 +38,7 @@ const Header = () => {
           خوش آمدید
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {user && <Typography variant="body2">{user}</Typography>}
           <IconButton color="inherit">
             <AccountCircle />
           </IconButton>

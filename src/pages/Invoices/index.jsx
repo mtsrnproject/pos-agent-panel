@@ -1,85 +1,84 @@
 // src/pages/Invoices/index.jsx
 import { useState, useEffect } from "react";
-import { Box, Grid, Typography, Button, Alert } from "@mui/material";
+import { Box, Grid, Typography, Button } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import InvoiceList from "../../components/invoices/InvoiceList";
 import InvoiceDetailsPanel from "../../components/invoices/InvoiceDetailsPanel";
 import AssignDeviceModal from "../../components/invoices/AssignDeviceModal";
-import { invoiceService } from "../../services/invoiceService";
+import invoiceService from "../../services/invoiceService";
 
 export default function Invoices() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [invoices, setInvoices] = useState([]);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [devices, setDevices] = useState([]);
 
   const [loadingList, setLoadingList] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingDevices, setLoadingDevices] = useState(false);
   const [loadingAssign, setLoadingAssign] = useState(false);
 
-  const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSerial, setSelectedSerial] = useState("");
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
-  // دریافت لیست فاکتورها
   useEffect(() => {
     fetchInvoices();
   }, []);
 
-  // دریافت جزئیات فاکتور انتخابی
-  useEffect(() => {
-    if (selectedInvoiceId) {
-      fetchInvoiceDetails(selectedInvoiceId);
-    }
-  }, [selectedInvoiceId]);
-
   const fetchInvoices = async () => {
     setLoadingList(true);
-    setError(null);
     try {
-      const data = await invoiceService.getInvoices();
-      setInvoices(data);
-      if (data.length > 0 && !selectedInvoiceId) {
-        setSelectedInvoiceId(data[0].id);
+      const response = await invoiceService.getInvoices();
+      const invoiceList = response.data || response || [];
+      setInvoices(invoiceList);
+      // انتخاب اولین فاکتور به‌صورت خودکار
+      if (invoiceList.length > 0) {
+        await selectInvoice(invoiceList[0]);
       }
     } catch (err) {
-      setError(err);
+      console.error(err);
       enqueueSnackbar("خطا در دریافت فاکتورها", { variant: "error" });
     } finally {
       setLoadingList(false);
     }
   };
 
-  const fetchInvoiceDetails = async (id) => {
-    setLoadingDetails(true);
+  const selectInvoice = async (invoice) => {
+    setSelectedInvoice(invoice);
+    setLoadingDevices(true);
     try {
-      const data = await invoiceService.getInvoiceById(id);
-      setSelectedInvoice(data);
+      // ← از invoice.name استفاده می‌کنیم، نه invoice.id
+      const result = await invoiceService.getDevicesByInvoice(invoice.name);
+      setDevices(result);
     } catch (err) {
-      enqueueSnackbar("خطا در دریافت جزئیات فاکتور", { variant: "error" });
+      console.error(err);
+      enqueueSnackbar("خطا در دریافت دستگاه‌ها", { variant: "error" });
     } finally {
-      setLoadingDetails(false);
+      setLoadingDevices(false);
     }
   };
 
-  const handleAssignClick = (serial) => {
-    setSelectedSerial(serial);
+  const handleAssignClick = (device) => {
+    setSelectedDevice(device);
     setModalOpen(true);
   };
 
-  const handleAssignSubmit = async (serial, formData) => {
+  const handleAssignSubmit = async (deviceName, formData) => {
     setLoadingAssign(true);
     try {
-      await invoiceService.assignDevice(serial, formData);
+      await invoiceService.assignDevice(deviceName, formData);
       enqueueSnackbar("دستگاه با موفقیت تخصیص یافت", { variant: "success" });
       setModalOpen(false);
-      // رفرش جزئیات فاکتور
-      if (selectedInvoiceId) {
-        fetchInvoiceDetails(selectedInvoiceId);
+      // رفرش لیست دستگاه‌های فاکتور انتخابی
+      if (selectedInvoice) {
+        const list = await invoiceService.getDevicesByInvoice(
+          selectedInvoice.name,
+        );
+        setDevices(list);
       }
     } catch (err) {
+      console.error(err);
       enqueueSnackbar(err.response?.data?.message || "خطا در تخصیص دستگاه", {
         variant: "error",
       });
@@ -90,12 +89,7 @@ export default function Invoices() {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
+      <Box mb={3}>
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
             مدیریت فاکتورها
@@ -104,25 +98,25 @@ export default function Invoices() {
             مشاهده و تخصیص فاکتورهای فروش به پایانه‌ها
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<Add />}>
-          ثبت فاکتور جدید
-        </Button>
       </Box>
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={4}>
           <InvoiceList
             invoices={invoices}
-            selectedId={selectedInvoiceId}
-            onSelect={setSelectedInvoiceId}
+            selectedId={selectedInvoice?.name} // ← name نه id
             loading={loadingList}
-            error={error}
+            onSelect={(name) => {
+              const item = invoices.find((x) => x.name === name);
+              if (item) selectInvoice(item);
+            }}
           />
         </Grid>
         <Grid item xs={12} lg={8}>
           <InvoiceDetailsPanel
             invoice={selectedInvoice}
-            loading={loadingDetails}
+            devices={devices}
+            loading={loadingDevices}
             onAssign={handleAssignClick}
           />
         </Grid>
@@ -130,7 +124,7 @@ export default function Invoices() {
 
       <AssignDeviceModal
         open={modalOpen}
-        serial={selectedSerial}
+        device={selectedDevice}
         onClose={() => setModalOpen(false)}
         onSubmit={handleAssignSubmit}
         loading={loadingAssign}
