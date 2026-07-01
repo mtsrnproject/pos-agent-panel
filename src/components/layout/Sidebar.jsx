@@ -116,21 +116,29 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
       <aside
         className={`
-    bg-white border-l border-slate-200 shadow-md
-    transition-all duration-300
-    flex flex-col
+    relative
+    bg-white
+    border-l
+    border-slate-200
+    shadow-md
+    transition-[width]
+    duration-300
+    flex
+    flex-col
+    flex-shrink-0
     overflow-hidden
     ${isOpen ? "w-[280px]" : "w-0"}
   `}
       >
         {/* Close */}
-
-        <button
-          onClick={onToggle}
-          className="absolute left-4 top-4 w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center"
-        >
-          <CloseIcon />
-        </button>
+        {/* {isOpen && (
+          <button
+            onClick={onToggle}
+            className="absolute left-4 top-4 z-20 w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center"
+          >
+            <CloseIcon />
+          </button>
+        )} */}
 
         {/* Logo */}
 

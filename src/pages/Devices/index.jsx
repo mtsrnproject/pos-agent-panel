@@ -237,7 +237,7 @@ const Devices = () => {
                       {device.status === "فاکتور شده" && (
                         <button
                           onClick={() => handleOpenAssignDialog(device)}
-                          className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-primary/20"
+                          className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold bg-blue-700 transition-colors shadow-sm shadow-primary/20"
                         >
                           تخصیص
                         </button>

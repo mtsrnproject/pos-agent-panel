@@ -242,7 +242,7 @@ export default function Invoices() {
                                 setSelectedDevice(device);
                                 setModalOpen(true);
                               }}
-                              className="px-3 py-1 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                              className="px-3 py-1 bg-primary text-white rounded-lg text-xs font-semibold bg-blue-700 transition-colors"
                             >
                               تخصیص
                             </button>
