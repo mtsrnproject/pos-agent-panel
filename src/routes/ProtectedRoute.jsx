@@ -1,10 +1,43 @@
+import { useState, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { CircularProgress, Box } from "@mui/material";
 import authService from "../services/authService";
 
 const ProtectedRoute = () => {
-  const isLoggedIn = authService.isLoggedIn();
+  // بررسی سریع localStorage / کوکی
+  const [status, setStatus] = useState(
+    authService.isLoggedIn() ? "ok" : "checking",
+  );
 
-  if (!isLoggedIn) {
+  useEffect(() => {
+    if (status !== "checking") return;
+    // اگر localStorage خالی بود، session Frappe را چک کن
+    authService.getSessionUser().then((user) => {
+      if (user) {
+        localStorage.setItem("isLoggedIn", "true");
+        setStatus("ok");
+      } else {
+        setStatus("denied");
+      }
+    });
+  }, []);
+
+  if (status === "checking") {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (status === "denied") {
     return <Navigate to="/login" replace />;
   }
 

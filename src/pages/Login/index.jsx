@@ -1,14 +1,4 @@
 import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 
@@ -41,9 +31,13 @@ const Login = () => {
         } catch (apiErr) {
           // اگر API کار نکرد، برای development موارد mock کن
           if (process.env.NODE_ENV === "development") {
-            localStorage.setItem("user", JSON.stringify(username));
+            // سعی کن از کوکی user_id بخوان، وگرنه username را ذخیره کن
+            const { getCookieValue } = await import("../../utils/cookieUtils");
+            const cookieUser = getCookieValue("user_id");
+            const userToStore =
+              cookieUser && cookieUser !== "Guest" ? cookieUser : username;
+            localStorage.setItem("user", JSON.stringify(userToStore));
             localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("authToken", "mock-dev-token");
             navigate("/dashboard");
           } else {
             throw apiErr;
@@ -59,62 +53,66 @@ const Login = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Card sx={{ maxWidth: 400, width: "100%", mx: 2 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography
-            variant="h4"
-            sx={{ mb: 3, textAlign: "center", fontWeight: 600 }}
-          >
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="w-full max-w-md mx-unit-4">
+        <div className="bg-surface-container rounded-3xl shadow-lg border border-outline-variant p-unit-8">
+          <h1 className="text-heading-lg font-heading-lg text-center mb-unit-6 text-on-surface">
             ورود به سیستم
-          </Typography>
+          </h1>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <div className="bg-error-container border border-error rounded-lg p-unit-4 mb-unit-4 text-error">
               {error}
-            </Alert>
+            </div>
           )}
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="نام کاربری"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={loading}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              type="password"
-              label="رمز عبور"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              sx={{ mb: 3 }}
-            />
-            <Button
-              fullWidth
+          <form onSubmit={handleSubmit} className="space-y-unit-4">
+            <div>
+              <label className="block text-label-md font-label-md text-on-surface-variant mb-unit-2">
+                نام کاربری
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                className="w-full px-unit-4 py-unit-3 rounded-xl border-2 border-primary bg-surface text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary disabled:opacity-50 disabled:bg-surface-variant"
+                placeholder="نام کاربری خود را وارد کنید"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-md font-label-md text-on-surface-variant mb-unit-2">
+                رمز عبور
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="w-full px-unit-4 py-unit-3 rounded-xl border-2 border-outline bg-surface text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:bg-surface-variant"
+                placeholder="رمز عبور خود را وارد کنید"
+              />
+            </div>
+
+            <button
               type="submit"
-              variant="contained"
-              size="large"
               disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
+              className="w-full py-unit-3 px-unit-4 bg-primary text-on-primary rounded-xl font-title-lg text-title-lg font-semibold hover:bg-primary-dark transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-unit-2"
             >
-              {loading ? "در حال ورود..." : "ورود"}
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-    </Box>
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+                  در حال ورود...
+                </>
+              ) : (
+                "ورود"
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

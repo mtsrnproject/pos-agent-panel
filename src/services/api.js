@@ -1,12 +1,14 @@
 import axios from "axios";
 
+// در development درخواست‌ها از طریق Vite proxy می‌رن (localhost → plus.hamtabank.com)
+// در production (روی همون دامنه) مستقیم کار می‌کنه
 const api = axios.create({
-  baseURL: "https://plus.hamtabank.com",
+  baseURL: import.meta.env.PROD ? "https://plus.hamtabank.com" : "",
   timeout: 15000,
+  withCredentials: true, // ارسال کوکی session با هر درخواست
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Authorization: "token db5ceba5939cfec:ac699dba08a7a7a",
   },
 });
 

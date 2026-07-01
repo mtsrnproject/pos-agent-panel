@@ -29,32 +29,50 @@ const FIELDS = JSON.stringify([
   "documents_validation_status",
   "cash_less",
   "submit_reject_reson",
+  "owner",
   "creation",
   "modified",
 ]);
 
 export const deviceService = {
   async getDevices(page = 1, limit = 10, search = "") {
-    let url =
+    const filterConditions = [];
+
+    if (search) {
+      filterConditions.push(["serial_number", "like", `%${search}%`]);
+    }
+
+    const filtersParam =
+      filterConditions.length > 0
+        ? encodeURIComponent(JSON.stringify(filterConditions))
+        : encodeURIComponent("[]");
+
+    const dataUrl =
       `/api/resource/${DOCTYPE}` +
       `?fields=${encodeURIComponent(FIELDS)}` +
+      `&filters=${filtersParam}` +
       `&limit_page_length=${limit}` +
       `&limit_start=${(page - 1) * limit}` +
       `&order_by=creation desc`;
 
-    if (search) {
-      const filters = JSON.stringify([
-        ["serial_number", "like", `%${search}%`],
-      ]);
+    const countUrl =
+      `/api/resource/${DOCTYPE}` +
+      `?fields=${encodeURIComponent('["name"]')}` +
+      `&filters=${filtersParam}` +
+      `&limit_page_length=0`;
 
-      url += `&filters=${encodeURIComponent(filters)}`;
-    }
+    const [response, countResponse] = await Promise.all([
+      api.get(dataUrl),
+      api.get(countUrl),
+    ]);
 
-    const response = await api.get(url);
+    const total = Array.isArray(countResponse?.data)
+      ? countResponse.data.length
+      : 0;
 
     return {
       data: response?.data || [],
-      total: response?.data?.length || 0,
+      total,
     };
   },
 

@@ -1,4 +1,5 @@
-/* src/index.css */
+@import "tailwindcss";
+
 @font-face {
   font-family: 'Modam';
   src: url('/fonts/ModamWeb-Regular.woff2') format('woff2');
@@ -23,6 +24,10 @@
   font-display: swap;
 }
 
+body {
+  font-family: 'Modam', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 * {
   font-family: 'Modam', sans-serif;
 }
@@ -30,4 +35,17 @@
 body {
   margin: 0;
   direction: rtl;
+}
+
+/* Custom sidebar positioning for RTL */
+aside {
+  position: fixed;
+  inset: 0 0 0 auto;
+  /* right: 0, top: 0, bottom: 0 */
+  width: 240px;
+  height: 100vh;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }

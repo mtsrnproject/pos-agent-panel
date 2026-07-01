@@ -2,25 +2,43 @@ import api from "./api";
 
 const DOCTYPE = "Invoice"; // نام Doctype فاکتور در Frappe
 
+const INVOICE_FIELDS = JSON.stringify([
+  "name",
+  "invoice_number",
+  "invoice_date",
+  "invoice_date_jalali",
+  "invoice_date_gregorian",
+  "first_name",
+  "last_name",
+  "national_id",
+  "mobile",
+  "device_type",
+  "devices_count",
+  "device_without_cash_les",
+  "agent",
+  "owner",
+  "creation",
+  "modified",
+  "docstatus",
+  "submit_reject_reson",
+]);
+
 const invoiceService = {
   /**
-   * دریافت لیست فاکتورها با فیلتر و صفحه‌بندی
+   * دریافت لیست فاکتورهای کاربر جاری
    */
   getInvoices: async (params = {}) => {
-    const {
-      status,
-      search,
-      page = 1,
-      pageSize = 20,
-      sortBy = "creation",
-      sortOrder = "desc",
-    } = params;
+    const { page = 1, pageSize = 50 } = params;
 
     try {
-      // ابتدا یک درخواست ساده بدون فیلترهای پیچیده
-      const data = await api.get(
-        `/api/resource/Invoice?limit_page_length=${pageSize}&limit_start=${(page - 1) * pageSize}`,
-      );
+      const url =
+        `/api/resource/${DOCTYPE}` +
+        `?fields=${encodeURIComponent(INVOICE_FIELDS)}` +
+        `&limit_page_length=${pageSize}` +
+        `&limit_start=${(page - 1) * pageSize}` +
+        `&order_by=creation desc`;
+
+      const data = await api.get(url);
       const invoiceList = Array.isArray(data) ? data : data?.data || [];
 
       return {
@@ -118,31 +136,47 @@ const invoiceService = {
   },
 
   /**
-   * دریافت دستگاه‌های یک فاکتور
+   * دریافت دستگاه‌های یک فاکتور بر اساس invoice_number
    */
-  getDevicesByInvoice: async (invoiceName) => {
+  getDevicesByInvoice: async (invoiceNumber) => {
     try {
-      const filters = JSON.stringify([["invoice", "=", invoiceName]]);
-      const params = new URLSearchParams({
-        filters,
-        fields: JSON.stringify([
-          "name",
-          "serial_number",
-          "device_model",
-          "device_brand",
-          "status",
-          "national_id",
-          "mobile",
-          "creation",
-        ]),
-      });
+      const filters = JSON.stringify([
+        ["invoice_number", "=", String(invoiceNumber)],
+      ]);
+      const fields = JSON.stringify([
+        "name",
+        "serial_number",
+        "device_model",
+        "device_brand",
+        "device_label",
+        "product",
+        "status",
+        "terminal",
+        "bank_switch",
+        "first_name",
+        "last_name",
+        "national_id",
+        "national__id",
+        "mobile",
+        "invoice",
+        "invoice_number",
+        "agent_name",
+        "seller_agent",
+        "owner",
+        "creation",
+      ]);
 
-      const data = await api.get(`/api/resource/Device?${params.toString()}`);
-      const deviceList = Array.isArray(data) ? data : data?.data || [];
-      return deviceList;
+      const url =
+        `/api/resource/Device` +
+        `?fields=${encodeURIComponent(fields)}` +
+        `&filters=${encodeURIComponent(filters)}` +
+        `&limit_page_length=100`;
+
+      const data = await api.get(url);
+      return Array.isArray(data) ? data : data?.data || [];
     } catch (error) {
       console.error(
-        `Error fetching devices for invoice ${invoiceName}:`,
+        `Error fetching devices for invoice ${invoiceNumber}:`,
         error,
       );
       throw error;
@@ -152,13 +186,11 @@ const invoiceService = {
   /**
    * تخصیص دستگاه به فاکتور
    */
-  assignDevice: async (deviceName, formData) => {
+  assignDevice: async (deviceName, { nationalId, mobile }) => {
     try {
       const data = await api.put(`/api/resource/Device/${deviceName}`, {
-        national__id: formData.nationalId,
-        mobile: formData.mobile,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        national__id: nationalId,
+        mobile: mobile,
         status: "تخصیص داده شده",
       });
       return Array.isArray(data) ? data[0] : data?.data || data;

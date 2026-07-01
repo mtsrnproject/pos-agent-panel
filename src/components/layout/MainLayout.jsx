@@ -1,20 +1,28 @@
-// src/components/layout/MainLayout.jsx
 import { Outlet } from "react-router-dom";
-import { Box } from "@mui/material";
-import Sidebar from "./Sidebar";
+import { useState } from "react";
 import Header from "./Header";
+import Sidebar from "./Sidebar";
 
 const MainLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar />
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
-        <Header />
-        <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: "#f5f5f5" }}>
+    <div className="flex h-screen bg-slate-100 overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen((prev) => !prev)}
+      />
+
+      {/* Main */}
+      <div className="flex flex-col flex-1 min-w-0">
+        <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
+
+        <main className="flex-1 overflow-auto p-6">
           <Outlet />
-        </Box>
-      </Box>
-    </Box>
+        </main>
+      </div>
+    </div>
   );
 };
 

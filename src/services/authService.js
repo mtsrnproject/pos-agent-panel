@@ -1,4 +1,5 @@
 import api from "./api";
+import { getCookieValue, getCurrentUserId } from "../utils/cookieUtils";
 
 const authService = {
   /**
@@ -11,13 +12,15 @@ const authService = {
         pwd: password,
       });
 
-      // ذخیره اطلاعات کاربر در localStorage
       if (response.message === "Logged In") {
-        // دریافت اطلاعات کاربر فعلی
-        const currentUser = await authService.getCurrentUser();
-        localStorage.setItem("user", JSON.stringify(currentUser));
+        // کوکی user_id که سرور بعد از لاگین تنظیم می‌کنه
+        // ایمیل واقعی کاربر است (مثلاً: 0020819447plus_@hamtabank.com)
+        const cookieUser = getCookieValue("user_id");
+        const userEmail =
+          cookieUser && cookieUser !== "Guest" ? cookieUser : username;
+
+        localStorage.setItem("user", JSON.stringify(userEmail));
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("authToken", "authenticated");
       }
 
       return response;
@@ -57,18 +60,51 @@ const authService = {
   },
 
   /**
-   * بررسی وضعیت ورود
+   * بررسی وضعیت ورود — localStorage یا کوکی session
    */
   isLoggedIn: () => {
-    return localStorage.getItem("isLoggedIn") === "true";
+    if (localStorage.getItem("isLoggedIn") === "true") return true;
+    // اگر کوکی user_id موجود و معتبر باشد، کاربر لاگین است
+    const cookieUser = getCookieValue("user_id");
+    return !!(cookieUser && cookieUser !== "Guest");
   },
 
   /**
-   * دریافت اطلاعات کاربر ذخیره شده
+   * دریافت اطلاعات کاربر ذخیره شده (کوکی > localStorage)
    */
   getStoredUser: () => {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+    // ابتدا از کوکی بخوان
+    const cookieUser = getCurrentUserId();
+    if (cookieUser) return cookieUser;
+    // fallback به localStorage
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      // اگر شیء بود، email/name را استخراج کن
+      if (parsed && typeof parsed === "object") {
+        return parsed.name || parsed.email || parsed.full_name || null;
+      }
+      return parsed;
+    } catch {
+      return raw;
+    }
+  },
+  /**
+   * دریافت کاربر جاری از session Frappe
+   */
+  getSessionUser: async () => {
+    try {
+      const res = await api.get("/api/method/frappe.auth.get_logged_user");
+      const user = res.message || res;
+      if (user && user !== "Guest") {
+        localStorage.setItem("user", JSON.stringify(user));
+        return user;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 };
 
